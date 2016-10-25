@@ -1,0 +1,23 @@
+{
+  "name": "ledstrip",
+  "authors": [
+    "Alejandro Huerta <ahuerta0686@gmail.com>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.1.1",
+    "bootstrap": "^3.3.7",
+    "jcanvas": "^15.12.12"
+  }
+}

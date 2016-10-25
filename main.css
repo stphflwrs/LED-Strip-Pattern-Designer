@@ -1,0 +1,34 @@
+html,body {
+  overflow: hidden;
+}
+
+#color-picker {
+  margin-bottom: 10px;
+}
+
+.led-strip-canvas-frame {
+  margin-bottom: 10px;
+
+  border: 1px solid #000;
+  overflow: auto;
+}
+
+@media (min-width: 768px) {
+  .led-strip-canvas-frame {
+    width: 706px;
+  }
+}
+@media (min-width: 992px) {
+  .led-strip-canvas-frame {
+    width: 940px;
+  }
+}
+@media (min-width: 1200px) {
+  .led-strip-canvas-frame {
+    width: 1140px;
+  }
+}
+
+canvas {
+  width: auto;
+}

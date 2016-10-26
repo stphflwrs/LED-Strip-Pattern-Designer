@@ -19,15 +19,22 @@ const canvasConfig = {
 };
 
 const stripConfig = {
-  numLeds: 60,
+  numLeds: 180,
+  stripPin: 0,
 };
 
 const blankCanvasFrame = $('<div>')
   .addClass('led-strip-canvas-frame')
+  .css('height', canvasConfig.pixelHeight + canvasConfig.pixelSpacing * 2)
   .append($('<canvas>')
     .addClass('led-strip-canvas')
     .attr('width', (canvasConfig.pixelWidth + canvasConfig.pixelSpacing) * stripConfig.numLeds + canvasConfig.pixelSpacing)
     .attr('height', canvasConfig.pixelHeight + canvasConfig.pixelSpacing * 2));
+
+const codeOutputInit = '#include <Adafruit_NeoPixel.h>\n#ifdef __AVR__\n\t#include <avr/power.h>\n#endif\n\n#define PIN ' + stripConfig.stripPin + '\n\nAdafruit_NeoPixel strip = Adafruit_NeoPixel(' + stripConfig.numLeds + ', PIN, NEO_GRB + NEO_KHZ800);\n\n';
+const codeOutputSetup = 'void setup() {\n\t#if defined (__AVR_ATtiny85__)\n\t\tif (F_CPU == 16000000) clock_prescale_set(clock_div_1);\n\t#endif\n\tstrip.begin();\n\tstrip.show();\n}\n\n';
+const codeOutputLoop = 'void loop() {\n\tfor (int i = 0; i < numFrames; i++) {\n\t\tsetPixels(frames[i], 500);\n\t}\n}\n\n'
+const codeOutputSetPixels = 'void setPixels(uint8_t stripArray[][3], uint16_t wait) {\n\tfor (int i = 0; i < strip.numPixels(); i++) {\n\t\tstrip.setPixelColor(i, strip.Color(stripArray[i][0], stripArray[i][1], stripArray[i][2]));\n\t}\n\tstrip.show();\n\tdelay(wait);\n}\n';
 
 var ledStrips = [];
 
@@ -37,18 +44,24 @@ function main() {
   registerListeners();
   initColorPicker();
   initLedStrip();
+  initCodeOutput();
 }
 
 function registerListeners() {
   $('#add-led-strip').on('click', clickAddLedStrip);
   $('#save-led-strips').on('click', clickSaveLedStrips);
   $('#load-led-strips').on('click', clickLoadLedStrips);
+  $('#select-code-output').on('click', clickSelectCodeOutput);
 }
 
 /* BEGIN Event Listeners */
 
+// ID based
+
 function clickAddLedStrip() {
   initLedStrip();
+
+  refreshOutputArrays();
 }
 
 function clickSaveLedStrips() {
@@ -58,6 +71,26 @@ function clickSaveLedStrips() {
 function clickLoadLedStrips() {
   ledStrips = JSON.parse(localStorage.getItem('ledStrip'));
   refreshLedStrips();
+}
+
+function clickSelectCodeOutput() {
+  selectText('output');
+}
+
+// Class based
+
+function clickDeleteLedStrip(event) {
+  event.preventDefault();
+  console.log(event);
+  const stripCanvasFrame = $(event.currentTarget).parent().parent(),
+        stripIndex = stripCanvasFrame.find('.led-strip-canvas').attr('id').match(/strip(\d*)/)[1];
+
+  ledStrips.splice(stripIndex, 1);
+  stripCanvasFrame.find('#strip-header' + stripIndex).remove();
+  stripCanvasFrame.find('#strip-frame' + stripIndex).remove();
+
+  refreshLedStrips();
+  refreshOutputArrays();
 }
 
 /* END Event Listeners */
@@ -122,14 +155,17 @@ function initLedStrip() {
 
   ledStrips.push(ledStrip);
 
-  const newLedStripCanvasFrame = blankCanvasFrame.clone(),
-        newLedStripCanvas = newLedStripCanvasFrame.find('canvas');
+  refreshLedStrips();
+  // drawLedStrip(ledStrip, ledStrips.length - 1);
+}
 
-  newLedStripCanvas.attr('id', 'strip' + (ledStrips.length - 1));
+function initCodeOutput() {
+  $('#output-init').text(codeOutputInit);
+  $('#output-setup').text(codeOutputSetup);
+  $('#output-loop').text(codeOutputLoop);
+  $('#output-set-pixels').text(codeOutputSetPixels);
 
-  $('#editor').append(newLedStripCanvasFrame);
-
-  drawLedStrip(ledStrip, ledStrips.length - 1);
+  refreshOutputArrays();
 }
 
 /* END Initialization Functions */
@@ -158,7 +194,44 @@ function refreshColorPicker() {
 function refreshLedStrips() {
   $('#editor').empty();
 
+  ledStrips.forEach(function(ledStrip, index, array) {
+    const newLedStripCanvasFrame = blankCanvasFrame.clone()
+            .attr('id', 'strip-frame' + index),
+          newLedStripCanvas = newLedStripCanvasFrame.find('canvas');
+
+    newLedStripCanvas.attr('id', 'strip' + index);
+
+    $('#editor').append($('<span>')
+      .text('LED Strip ' + (index + 1) + ' | ')
+      .attr('id', 'strip-header' + index)
+      .append($('<a>')
+        .attr('href', '#')
+        .addClass('delete-led-strip')
+        .text('Delete')
+        .on('click', clickDeleteLedStrip)));
+    $('#editor').append(newLedStripCanvasFrame);
+  });
+
   ledStrips.forEach(drawLedStrip);
+}
+
+function refreshOutputArrays() {
+  $('#output-arrays').empty();
+
+  var text = 'uint16_t numFrames = ' + ledStrips.length + ';\n\n';
+  text += 'uint8_t frames[' + ledStrips.length + '][' + stripConfig.numLeds + '][3] = \n';
+  text += '{';
+  ledStrips.forEach(function(ledStrip, index, array) {
+    // text += 'frames[' + index + '] = ';
+    text += parseLedStripToCArray(ledStrip);
+    // text += '},\n';
+    if (index + 1 < array.length) {
+      text += ',\n';
+    }
+  });
+  text += '};\n\n';
+
+  $('#output-arrays').text(text);
 }
 
 /* END Refresh Functions */
@@ -262,12 +335,49 @@ function drawLedStrip(ledStrip, stripId) {
         $(layer.canvas).setLayer(layer.name, {
           fillStyle: 'hsl(' + colorPickerConfig.hue + ',' + colorPickerConfig.saturation + '%,' + colorPickerConfig.lightness + '%)',
         }).drawLayers();
+
+        // var hslRe = /hsl\((\d{1,3}),(\d{1,3})%,(\d{1,3})%\)/;
+        var rgbPixel = hslToRgb(
+          colorPickerConfig.hue / 255.0,
+          colorPickerConfig.saturation / 100.0,
+          colorPickerConfig.lightness / 100.0);
+        rgbPixel.forEach(function(pixel, index) {
+          rgbPixel[index] = Math.round(pixel);
+        });
+        var ledStripIndex = parseInt($(layer.canvas).attr('id').match(/strip(\d{1,})/)[1]),
+            ledStripPixelIndex = layer.index - 1;
+        ledStrips[ledStripIndex].colors[ledStripPixelIndex].r = rgbPixel[0];
+        ledStrips[ledStripIndex].colors[ledStripPixelIndex].g = rgbPixel[1];
+        ledStrips[ledStripIndex].colors[ledStripPixelIndex].b = rgbPixel[2];
+
+        refreshOutputArrays();
       }
     });
   }
 }
 
 /* END Draw Functions */
+
+/* BEGIN Parsing Functions */
+
+function parseLedStripToCArray(ledStrip) {
+  var outputCArray = '';
+
+  outputCArray += '{';
+  ledStrip.colors.forEach(function(pixel, index, array) {
+    outputCArray += '{';
+    outputCArray += String(pixel.r) + ',';
+    outputCArray += String(pixel.g) + ',';
+    outputCArray += String(pixel.b) + '}';
+    if (index + 1 < array.length) {
+      outputCArray += ',';
+    }
+  });
+  outputCArray += '}';
+  return outputCArray;
+}
+
+/* END Parsing Functions */
 
 /* BEGIN Borrowed */
 
@@ -308,6 +418,24 @@ function hslToRgb(h, s, l) {
   }
 
   return [ r * 255, g * 255, b * 255 ];
+}
+
+function selectText(element) {
+  var doc = document
+    , text = doc.getElementById(element)
+    , range, selection
+  ;    
+  if (doc.body.createTextRange) {
+    range = document.body.createTextRange();
+    range.moveToElementText(text);
+    range.select();
+  } else if (window.getSelection) {
+    selection = window.getSelection();        
+    range = document.createRange();
+    range.selectNodeContents(text);
+    selection.removeAllRanges();
+    selection.addRange(range);
+  }
 }
 
 /* END Borrowed */

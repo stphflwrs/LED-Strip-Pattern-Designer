@@ -1,3 +1,4 @@
+<!doctype html>
 <html>
   <head>
     <title>LED Strip Configurator</title>
@@ -19,7 +20,7 @@
     <div class="container">
       <h2>LED Strip Configurator</h2>
       
-      <div class="row col-md-12" id="options">
+      <div id="options">
         <p>
           <button class="btn btn-primary" id="add-led-strip">Add LED Strip</button>
           <button class="btn btn-success" id="save-led-strips">Save LED Strips (to Local Storage)</button>
@@ -27,16 +28,26 @@
         </p>
       </div>
 
+      <h3>LED Strip Editor</h3>
       <div id="color-picker">
         <span><strong>Current Color: </strong></span>
       </div>
 
       <div id="editor">
-        <!-- <div class="led-strip-canvas">
-          <canvas id="test" width="3000" height="30"></canvas>
-        </div> -->
         
       </div>
+
+      <h3>Code Output for Arduino IDE</h3>
+      <code id="output"><div id="output-init"></div><div id="output-arrays"></div><div id="output-setup"></div><div id="output-loop"></div><div id="output-set-pixels"></div></code>
+
+      <div id="options-output">
+        <button class="btn btn-default" id="select-code-output">Select All Code</button>
+      </div>
+
+      <div id="footer">
+        <p class="pull-right"><a href="https://github.com/ahuerta0686/LED-Strip-Pattern-Designer">View on GitHub</a> | <a href="http://cyanberry.io">http://cyanberry.io</a></p>
+      </div>
+
     </div>
   </body>
 

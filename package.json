@@ -1,0 +1,27 @@
+{
+  "name": "ledstrip",
+  "version": "1.0.0",
+  "description": "*A work in progress*",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ahuerta0686/LED-Strip-Pattern-Designer.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ahuerta0686/LED-Strip-Pattern-Designer/issues"
+  },
+  "homepage": "https://github.com/ahuerta0686/LED-Strip-Pattern-Designer#readme",
+  "devDependencies": {
+    "browser-sync": "^2.17.5",
+    "gulp": "^3.9.1",
+    "gulp-nodemon": "^2.2.1"
+  },
+  "dependencies": {
+    "q": "^1.4.1"
+  }
+}

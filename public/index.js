@@ -65,7 +65,15 @@ function clickAddLedStrip() {
 }
 
 function clickSaveLedStrips() {
-  localStorage.setItem('ledStrip', JSON.stringify(ledStrips));
+  // localStorage.setItem('ledStrip', JSON.stringify(ledStrips));
+  $.ajax({
+    method: 'POST',
+    url: '/strips',
+    data: ledStrips,
+    dataType: 'json'
+  }).done(function(msg) {
+    console.log(msg);
+  });
 }
 
 function clickLoadLedStrips() {
@@ -156,7 +164,6 @@ function initLedStrip() {
   ledStrips.push(ledStrip);
 
   refreshLedStrips();
-  // drawLedStrip(ledStrip, ledStrips.length - 1);
 }
 
 function initCodeOutput() {
@@ -181,14 +188,20 @@ function refreshCurrentColor() {
 }
 
 function refreshColorPicker() {
-  var colorPickerSaturationCanvas = $('.color-picker-saturation-canvas');
-  var colorPickerLightnessCanvas = $('.color-picker-lightness-canvas');
+  const colorPickerHueCanvas = $('.color-picker-hue-canvas'),
+        colorPickerSaturationCanvas = $('.color-picker-saturation-canvas'),
+        colorPickerLightnessCanvas = $('.color-picker-lightness-canvas');
 
+  colorPickerHueCanvas.clearCanvas();
   colorPickerSaturationCanvas.clearCanvas();
   colorPickerLightnessCanvas.clearCanvas();
 
+  drawColorPickerHue();
   drawColorPickerSaturation();
   drawColorPickerLightness();
+  drawColorPickerTicks();
+
+
 }
 
 function refreshLedStrips() {
@@ -202,7 +215,10 @@ function refreshLedStrips() {
     newLedStripCanvas.attr('id', 'strip' + index);
 
     $('#editor').append($('<span>')
-      .text('LED Strip ' + (index + 1) + ' | ')
+      .append($('<strong>')
+        .text('LED Strip ' + (index + 1)))
+      .append($('<span>')
+        .text(' | '))
       .attr('id', 'strip-header' + index)
       .append($('<a>')
         .attr('href', '#')
@@ -266,6 +282,16 @@ function drawColorPickerHue() {
         refreshCurrentColor();
       }
     });
+
+    colorPickerHueCanvas.drawPolygon({
+      strokeStyle: 'rgb(0,0,0)',
+      strokeWidth: 1,
+      fillStyle: 'rgb(255,255,255)',
+      x: Math.ceil(colorPickerConfig.width * (colorPickerConfig.hue / 360.0)), y: 0,
+      radius: 10,
+      sides: 3,
+      rotate: 180,
+    });
   }
 }
 
@@ -282,8 +308,20 @@ function drawColorPickerSaturation() {
         var saturationRe = /hsl\(\d{1,3},(\d{1,3})%,\d{1,3}%\)/;
         // console.log(layer.fillStyle.match(saturationRe));
         colorPickerConfig.saturation = layer.fillStyle.match(saturationRe)[1];
+
+        refreshColorPicker();
         refreshCurrentColor();
       }
+    });
+
+    colorPickerSaturationCanvas.drawPolygon({
+      strokeStyle: 'rgb(0,0,0)',
+      strokeWidth: 1,
+      fillStyle: 'rgb(255,255,255)',
+      x: Math.ceil(colorPickerConfig.width * (colorPickerConfig.saturation / 100.0)), y: 0,
+      radius: 10,
+      sides: 3,
+      rotate: 180,
     });
   }
 }
@@ -301,8 +339,20 @@ function drawColorPickerLightness() {
         var lightnessRe = /hsl\(\d{1,3},\d{1,3}%,(\d{1,3})%\)/;
         // console.log(layer.fillStyle.match(lightnessRe));
         colorPickerConfig.lightness = layer.fillStyle.match(lightnessRe)[1];
+
+        refreshColorPicker();
         refreshCurrentColor();
       }
+    });
+
+    colorPickerLightnessCanvas.drawPolygon({
+      strokeStyle: 'rgb(0,0,0)',
+      strokeWidth: 1,
+      fillStyle: 'rgb(255,255,255)',
+      x: Math.ceil(colorPickerConfig.width * (colorPickerConfig.lightness / 100.0)), y: 0,
+      radius: 10,
+      sides: 3,
+      rotate: 180,
     });
   }
 }
@@ -354,6 +404,45 @@ function drawLedStrip(ledStrip, stripId) {
       }
     });
   }
+}
+
+function drawColorPickerTicks() {
+  const colorPickerHueCanvas = $('.color-picker-hue-canvas'),
+        colorPickerSaturationCanvas = $('.color-picker-saturation-canvas'),
+        colorPickerLightnessCanvas = $('.color-picker-lightness-canvas');
+
+  colorPickerHueCanvas.drawPolygon({
+    layer: true,
+    strokeStyle: 'rgb(0,0,0)',
+    strokeWidth: 1,
+    fillStyle: 'rgb(255,255,255)',
+    x: Math.ceil(colorPickerConfig.width * (colorPickerConfig.hue / 360.0)), y: 0,
+    radius: 10,
+    sides: 3,
+    rotate: 180,
+  });
+
+  colorPickerSaturationCanvas.drawPolygon({
+    layer: true,
+    strokeStyle: 'rgb(0,0,0)',
+    strokeWidth: 1,
+    fillStyle: 'rgb(255,255,255)',
+    x: Math.ceil(colorPickerConfig.width * (colorPickerConfig.saturation / 100.0)), y: 0,
+    radius: 10,
+    sides: 3,
+    rotate: 180,
+  });
+
+  colorPickerLightnessCanvas.drawPolygon({
+    layer: true,
+    strokeStyle: 'rgb(0,0,0)',
+    strokeWidth: 1,
+    fillStyle: 'rgb(255,255,255)',
+    x: Math.ceil(colorPickerConfig.width * (colorPickerConfig.lightness / 100.0)), y: 0,
+    radius: 10,
+    sides: 3,
+    rotate: 180,
+  });
 }
 
 /* END Draw Functions */
@@ -419,6 +508,9 @@ function hslToRgb(h, s, l) {
 
   return [ r * 255, g * 255, b * 255 ];
 }
+
+/* Found here: http://stackoverflow.com/questions/985272/selecting-text-in-an-element-akin-to-highlighting-with-your-mouse */
+/* See Jason's edit */
 
 function selectText(element) {
   var doc = document

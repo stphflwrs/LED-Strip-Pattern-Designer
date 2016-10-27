@@ -16,7 +16,7 @@ gulp.task('inject', () => {
     .pipe(gulp.dest('./public'));
 
   gulp.src('public/index.html')
-    .pipe(inject(sources, {name: 'local', ignorePath: 'public/'}))
+    .pipe(inject(sources, {name: 'sources', ignorePath: 'public/'}))
     .pipe(gulp.dest('./public'));
 });
 

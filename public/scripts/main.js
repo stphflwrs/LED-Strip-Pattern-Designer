@@ -71,6 +71,7 @@ function clickSaveLedStrips() {
 function clickLoadLedStrips() {
   ledStrips = JSON.parse(localStorage.getItem('ledStrip'));
   refreshLedStrips();
+  refreshOutputArrays();
 }
 
 function clickSelectCodeOutput() {

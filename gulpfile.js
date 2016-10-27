@@ -1,11 +1,26 @@
 const gulp = require('gulp'),
       browserSync = require('browser-sync'),
       fs = require('fs'),
-      nodemon = require('gulp-nodemon');
+      nodemon = require('gulp-nodemon'),
+      inject = require('gulp-inject'),
+      clean = require('gulp-clean'),
+      bowerFiles = require('main-bower-files');
 
-gulp.task('default', ['browser-sync'], () => {});
+var sources = gulp.src(['public/scripts/**/*.js', 'public/styles/**/*.css'], {read: false});
 
-gulp.task('browser-sync', ['nodemon'], () => {
+gulp.task('default', ['inject', 'browser-sync', 'nodemon'], () => {});
+
+gulp.task('inject', () => {
+  gulp.src('public/index.html')
+    .pipe(inject(gulp.src(bowerFiles(), {read: false}), {name: 'bower'}))
+    .pipe(gulp.dest('./public'));
+
+  gulp.src('public/index.html')
+    .pipe(inject(sources, {name: 'local', ignorePath: 'public/'}))
+    .pipe(gulp.dest('./public'));
+});
+
+gulp.task('browser-sync', () => {
   browserSync.init(null, {
     proxy: 'http://localhost:3000',
     middleware: [{
@@ -27,6 +42,12 @@ gulp.task('nodemon', (cb) => {
       started = true;
     }
   });
+});
+
+gulp.task('build', () => {
+  gulp.src('public/index.html')
+    .pipe(inject(gulp.src(bowerFiles(), {read: false})))
+    .pipe(gulp.dest('./dist'));
 });
 
 function serveStaticBowerComponents(req, res, next) {

@@ -65,15 +65,7 @@ function clickAddLedStrip() {
 }
 
 function clickSaveLedStrips() {
-  // localStorage.setItem('ledStrip', JSON.stringify(ledStrips));
-  $.ajax({
-    method: 'POST',
-    url: '/strips',
-    data: ledStrips,
-    dataType: 'json'
-  }).done(function(msg) {
-    console.log(msg);
-  });
+  localStorage.setItem('ledStrip', JSON.stringify(ledStrips));
 }
 
 function clickLoadLedStrips() {
@@ -144,9 +136,7 @@ function initColorPicker() {
   $('#color-picker').append(colorPickerLightnessCanvas);
 
   drawColorPickerCurrent();
-  drawColorPickerHue();
-  drawColorPickerSaturation();
-  drawColorPickerLightness();
+  refreshColorPicker();
 }
 
 function initLedStrip() {

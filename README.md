@@ -15,3 +15,7 @@ You will need bower and gulp-cli to run the following while in the project direc
 Run using gulp (an awesome task runner)
 
     gulp
+
+### Live Demo
+
+Check it out [here](http://cyanberry.io:9000).
